@@ -22,6 +22,7 @@ class AttendanceScreen extends StatefulWidget {
 class _AttendanceScreenState extends State<AttendanceScreen> {
 
   final bloc = DIObject.attendanceBloc;
+  bool _isLoading = false;
 
   @override
   void initState() {
@@ -36,9 +37,14 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
   }
 
   void _getCurrentLocation(dynamic latLng) async {
+    WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+      AppUtil.showLoading(context);
+      _isLoading = true;
+    });
     bloc.position = await AppUtil.getCurrentLocation();
     bloc.latitude = bloc.position?.latitude;
     bloc.longitude = bloc.position?.longitude;
+    _checkLoading();
     bloc.add(CreateAttendanceEvent(
         pinLatitude: latLng[0],
         pinLongitude: latLng[1]
@@ -58,12 +64,21 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
       body: BlocBuilder(
         bloc: bloc,
         builder: (ctx, state) {
+          if (state is ShowLoadingAttendanceState) {
+            WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+              AppUtil.showLoading(context);
+            });
+            _isLoading = true;
+          }
+
           if (state is SuccessCreateAttendanceState) {
+            _checkLoading();
             bloc.add(ChangeAttendanceStateEvent());
             Fluttertoast.showToast(msg: state.message);
           }
 
           if (state is ShowErrorAttendanceState) {
+            _checkLoading();
             WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
               AppUtil.showSnackBar(context, message: state.message);
             });
@@ -82,6 +97,15 @@ class _AttendanceScreenState extends State<AttendanceScreen> {
         },
       ),
     );
+  }
+
+  void _checkLoading() {
+    if (_isLoading) {
+      WidgetsBinding.instance.addPostFrameCallback((timeStamp) {
+        Navigator.pop(context);
+      });
+      _isLoading = false;
+    }
   }
 }
 

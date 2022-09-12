@@ -52,6 +52,8 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
     });
 
     on<CreateAttendanceEvent>((event, emit) async {
+      emit(ShowLoadingAttendanceState());
+
       final payload = AttendanceData(
         dateTime: DateTime.now(),
         latitude: latitude,
@@ -63,7 +65,9 @@ class AttendanceBloc extends Bloc<AttendanceEvent, AttendanceState> {
       ).round();
 
       if (distance > 50) {
-        emit(ShowErrorAttendanceState("Too far from checkpoint"));
+        await Future.delayed(const Duration(seconds: 1), () {
+          emit(ShowErrorAttendanceState("Too far from checkpoint"));
+        });
       } else {
         final result = await useCase.createAttendance(payload);
 

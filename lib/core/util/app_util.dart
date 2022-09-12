@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:geocoding/geocoding.dart';
@@ -94,5 +97,35 @@ class AppUtil {
     }
     final position = await Geolocator.getCurrentPosition();
     return position;
+  }
+
+  static void showLoading(BuildContext context) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => Center(
+        child: CupertinoPopupSurface(
+          child: Material(
+            child: WillPopScope(
+              onWillPop: () async => false,
+              child: Padding(
+                padding:
+                const EdgeInsets.symmetric(vertical: 12, horizontal: 32),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Platform.isIOS
+                        ? const CupertinoActivityIndicator(radius: 12)
+                        : const CircularProgressIndicator(color: Colors.black),
+                    const SizedBox(height: 8),
+                    const AppText(title: "Please Wait")
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
